@@ -38,16 +38,21 @@ public class CreateAccountService implements CreateAccountUseCase {
      */
     @Override
     public Single<Account> create(CreateAccountDto createAccountDto) {
-        return Single.defer(() -> {
-                    accountRulesValidator.validateConditions(
-                            createAccountDto.type(),
-                            createAccountDto.monthlyMovementLimit(),
-                            createAccountDto.maintenanceFee(),
-                            createAccountDto.movementDayOfMonth());
-                    return customerClientPort.findCustomerById(createAccountDto.customerId());
-                })
-                // flatMap: con el cliente ya consultado en ms-customer, se encadena el resto de la creación
+        return Single.defer(() -> findCustomerAfterValidatingConditions(createAccountDto))
                 .flatMap(customer -> createForCustomer(createAccountDto, customer));
+    }
+
+    /**
+     * Valida las condiciones propias del tipo de cuenta y consulta el cliente titular en ms-customer.
+     */
+    private Single<CustomerInfoDto> findCustomerAfterValidatingConditions(CreateAccountDto createAccountDto) {
+        accountRulesValidator.validateConditions(
+                createAccountDto.type(),
+                createAccountDto.monthlyMovementLimit(),
+                createAccountDto.maintenanceFee(),
+                createAccountDto.movementDayOfMonth());
+
+        return customerClientPort.findCustomerById(createAccountDto.customerId());
     }
 
     /**

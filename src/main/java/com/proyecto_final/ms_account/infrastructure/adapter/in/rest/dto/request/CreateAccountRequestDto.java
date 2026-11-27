@@ -32,8 +32,10 @@ public record CreateAccountRequestDto(
         @PositiveOrZero(message = "maintenanceFee must be zero or greater")
         BigDecimal maintenanceFee,
 
-        @Min(value = AccountValidationConstants.MIN_MOVEMENT_DAY, message = "movementDayOfMonth must be between 1 and 28")
-        @Max(value = AccountValidationConstants.MAX_MOVEMENT_DAY, message = "movementDayOfMonth must be between 1 and 28")
+        @Min(value = AccountValidationConstants.MIN_MOVEMENT_DAY,
+                message = "movementDayOfMonth must be between 1 and 28")
+        @Max(value = AccountValidationConstants.MAX_MOVEMENT_DAY,
+                message = "movementDayOfMonth must be between 1 and 28")
         Integer movementDayOfMonth,
 
         @Valid
