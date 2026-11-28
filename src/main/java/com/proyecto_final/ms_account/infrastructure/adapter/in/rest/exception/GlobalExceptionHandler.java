@@ -8,6 +8,7 @@ import com.proyecto_final.ms_account.domain.exception.CustomerServiceUnavailable
 import com.proyecto_final.ms_account.domain.exception.InvalidAccountConditionsException;
 import com.proyecto_final.ms_account.domain.exception.InvalidAccountParticipantsException;
 import com.proyecto_final.ms_account.infrastructure.adapter.in.rest.dto.response.ErrorResponseDto;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -63,12 +64,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * ms-customer no disponible: 503.
+     * ms-customer no disponible (caído, timeout o circuit breaker abierto): 503.
      */
     @ExceptionHandler(CustomerServiceUnavailableException.class)
     public ResponseEntity<ErrorResponseDto> handleCustomerServiceUnavailable(
             CustomerServiceUnavailableException exception) {
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), List.of());
+    }
+
+    /**
+     * límite de tasa (rate limit) excedido al consultar ms-customer: 429.
+     */
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<ErrorResponseDto> handleRateLimitExceeded(RequestNotPermitted exception) {
+        log.warn("Rate limit exceeded: {}", exception.getMessage());
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, "Too many requests, try again later", List.of());
     }
 
     /**
